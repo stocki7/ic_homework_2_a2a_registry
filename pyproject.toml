@@ -1,0 +1,15 @@
+[project]
+name = "homework-2-a2a-registry"
+version = "0.1.0"
+description = "Homework Teil 2, Option A - Distributed Remote A2A System with Dynamic Registry Lookup"
+requires-python = ">=3.11"
+# fasta2a wie in Sample 6 auf 0.6.1 fixiert: neuere Versionen (>= 1.0) sprechen das A2A-1.0-Format,
+# das LiteLLM für Pydantic-AI-Agenten nicht versteht. pydantic-ai-slim in aktueller Version (für Gemini 3).
+dependencies = [
+    "fasta2a[pydantic-ai]==0.6.1",
+    "httpx==0.28.1",
+    "pydantic-ai-slim[openai]==2.57.0",
+    "python-dotenv==1.2.2",
+    "requests==2.34.2",
+    "uvicorn==0.51.0",
+]

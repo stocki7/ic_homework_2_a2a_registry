@@ -1,0 +1,25 @@
+FROM python:3.11-slim
+
+# 1. Keine .pyc-Dateien schreiben und Ausgaben ungepuffert loggen
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH="/app"
+
+# 2. uv installieren
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+WORKDIR /app
+
+# 3. Abhängigkeiten direkt mit uv installieren (Versionen siehe pyproject.toml)
+RUN uv pip install --system --no-cache \
+    "pydantic-ai-slim[openai]==2.57.0" \
+    "fasta2a[pydantic-ai]==0.6.1" \
+    "python-dotenv==1.2.2" \
+    "uvicorn==0.51.0"
+
+# 4. Quellcode kopieren
+COPY . .
+
+# 5. Port freigeben und Uvicorn-Anwendung starten auf Port 8022
+EXPOSE 8022
+CMD ["uvicorn", "agent_component_lookup:app", "--host", "0.0.0.0", "--port", "8022"]

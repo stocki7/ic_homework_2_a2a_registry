@@ -1,0 +1,61 @@
+model_list:
+  # Fester Alias, den Agenten und Router verwenden. Das echte Modell kommt aus .env (LLM_MODEL).
+  - model_name: default-model
+    litellm_params:
+      model: os.environ/GEMINI_MODEL
+      api_key: os.environ/GEMINI_API_KEY
+
+litellm_settings:
+  num_retries: 3   # Wiederholung bei 429 (Gemini Free-Tier-Limit)
+  # Agent-Hosts für LiteLLM freigeben (vgl. Kommentar in Sample 6 main.py)
+  user_url_allowed_hosts:
+    - agent-bmk-extraction
+    - agent-component-lookup
+    - agent-spare-parts
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+
+# Agenten-Registry: abrufbar über GET /v1/agents, aufrufbar über /v1/a2a/{agent_id}/message/send
+agents:
+  - agent_name: agent-bmk-extraction
+    agent_card_params:
+      name: agent-bmk-extraction
+      description: Extrahiert Betriebsmittelkennzeichen (BMK, z. B. =A1+S2-K3) aus Störungsmeldungen in Freitext.
+      url: http://agent-bmk-extraction:8021
+      version: "1.0.0"
+      protocolVersion: "0.3.0"
+      defaultInputModes: [text/plain]
+      defaultOutputModes: [text/plain]
+      capabilities: {streaming: false}
+      skills: []
+    litellm_params:
+      custom_llm_provider: pydantic_ai_agents
+
+  - agent_name: agent-component-lookup
+    agent_card_params:
+      name: agent-component-lookup
+      description: Liefert Bauteil und Artikelnummer zu einem BMK (z. B. =A1+S2-K3).
+      url: http://agent-component-lookup:8022
+      version: "1.0.0"
+      protocolVersion: "0.3.0"
+      defaultInputModes: [text/plain]
+      defaultOutputModes: [text/plain]
+      capabilities: {streaming: false}
+      skills: []
+    litellm_params:
+      custom_llm_provider: pydantic_ai_agents
+
+  - agent_name: agent-spare-parts
+    agent_card_params:
+      name: agent-spare-parts
+      description: Prüft Lagerbestand, Lagerort und Lieferzeit von Ersatzteilen anhand der Artikelnummer.
+      url: http://agent-spare-parts:8023
+      version: "1.0.0"
+      protocolVersion: "0.3.0"
+      defaultInputModes: [text/plain]
+      defaultOutputModes: [text/plain]
+      capabilities: {streaming: false}
+      skills: []
+    litellm_params:
+      custom_llm_provider: pydantic_ai_agents

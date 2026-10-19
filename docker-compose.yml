@@ -1,0 +1,51 @@
+# Startet den LiteLLM-Proxy (LLM-Gateway + Agenten-Registry + A2A-Gateway)
+# und die drei Agenten jeweils in einem eigenen Container auf einem eigenen Port.
+services:
+  litellm:
+    image: ghcr.io/berriai/litellm:v1.106.0
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: gemini/${LLM_MODEL:?LLM_MODEL in .env setzen}
+      LITELLM_MASTER_KEY: ${OPENAI_API_KEY}
+      DATABASE_URL: postgresql://litellm:litellm@litellm-db:5432/litellm  # für die LiteLLM-Oberfläche (/ui)
+    depends_on:
+      - litellm-db
+
+  # Datenbank für die LiteLLM-Oberfläche (Login unter http://localhost:4000/ui)
+  litellm-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: litellm
+      POSTGRES_DB: litellm
+
+  agent-bmk-extraction:
+    build:
+      context: .
+      dockerfile: Dockerfile.bmkextraction
+    ports:
+      - "8021:8021"
+    environment: &agent-env
+      OPENAI_BASE_URL: http://litellm:4000
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+  agent-component-lookup:
+    build:
+      context: .
+      dockerfile: Dockerfile.componentlookup
+    ports:
+      - "8022:8022"
+    environment: *agent-env
+
+  agent-spare-parts:
+    build:
+      context: .
+      dockerfile: Dockerfile.spareparts
+    ports:
+      - "8023:8023"
+    environment: *agent-env
